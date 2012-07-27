@@ -28,6 +28,7 @@ class CNumber(Generable):
 class String(Generable):
     def __init__(self, text):
         self.text = text
+        self._fields = []
 
     def generate(self):
         yield '\"%s\"' % self.text
@@ -343,6 +344,9 @@ class Statement(codepy.cgen.Statement):
     def __init__(self, text):
         super(Statement, self).__init__(text)
         self._fields = []
+
+    def generate(self, with_semicolon=False):
+        return super(Statement, self).generate()
         
     def to_xml(self):
         node = ElementTree.Element("Statement")
@@ -378,12 +382,13 @@ class Print(Generable):
     def __init__(self, text, newline):
         self.text = text
         self.newline = newline
+        self._fields = ['text']
 
     def generate(self, with_semicolon=True):
         if self.newline:
-            yield 'std::cout %s << std::endl;' % self.text
+            yield 'std::cout << %s << std::endl;' % self.text
         else:
-            yield 'std::cout %s;' % self.text
+            yield 'std::cout << %s;' % self.text
 
 class Compare(Generable):
     def __init__(self, left, op, right):
