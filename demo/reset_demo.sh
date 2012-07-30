@@ -146,20 +146,23 @@ demo_commands () {
 }
 
 reset_demo () {
-    rm -rf $ASP_ROOT/asp/analysis
-    cp -rf $GITHUB_ASP_ROOT/asp/analysis/ $ASP_ROOT/asp/analysis
+	rm -rf $ASP_ROOT
+	cp -rf $GITHUB_ASP_ROOT/ $ASP_ROOT
 
-    rm -rf $ASP_ROOT/asp/codegen
-    cp -rf $GITHUB_ASP_ROOT/asp/codegen/ $ASP_ROOT/asp/codegen
+    #rm -rf $ASP_ROOT/asp/analysis
+    #cp -rf $GITHUB_ASP_ROOT/asp/analysis/ $ASP_ROOT/asp/analysis
 
-    rm -rf $ASP_ROOT/demo
-    cp -rf $GITHUB_ASP_ROOT/demo/ $ASP_ROOT/demo
+    #rm -rf $ASP_ROOT/asp/codegen
+    #cp -rf $GITHUB_ASP_ROOT/asp/codegen/ $ASP_ROOT/asp/codegen
 
-    rm -rf $ASP_ROOT/specializers/stencil
-    cp -rf $GITHUB_ASP_ROOT/specializers/stencil/ $ASP_ROOT/specializers/stencil
+    #rm -rf $ASP_ROOT/demo
+    #cp -rf $GITHUB_ASP_ROOT/demo/ $ASP_ROOT/demo
 
-    rm -rf $ASP_ROOT/specializers/tinycu
-    cp -rf $GITHUB_ASP_ROOT/specializers/tinycu/ $ASP_ROOT/specializers/tinycu
+    #rm -rf $ASP_ROOT/specializers/stencil
+    #cp -rf $GITHUB_ASP_ROOT/specializers/stencil/ $ASP_ROOT/specializers/stencil
+
+    #rm -rf $ASP_ROOT/specializers/tinycu
+    #cp -rf $GITHUB_ASP_ROOT/specializers/tinycu/ $ASP_ROOT/specializers/tinycu
 
     source $DEMO_ROOT/reset_demo.sh
 }
