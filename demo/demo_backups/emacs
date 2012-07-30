@@ -1,0 +1,7 @@
+;; Goto-line short-cut key                                                                                                   
+(global-set-key "\C-l" 'goto-line)
+
+;; Split windows horizontally
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
+

@@ -1,0 +1,57 @@
+==========================================================================================
+
+# login to Debian VM. When asked enter the password: vagrant
+$ ssh -l vagrant 192.168.56.101
+
+ln -s /media/sf_ASP/ asp
+
+==========================================================================================
+
+# edit ~/.profile
+> emacs ~/.profile
+# Add the following lines to the end of the file, save and close.
+export ASP_ROOT=/home/vagrant/asp
+export PYTHONPATH=$ASP_ROOT:$ASP_ROOT/asp:$ASP_ROOT/asp/codegen:$ASP_ROOT/asp/analysis:$ASP_ROOT/specializers/stencil:$PYTHONPATH
+export LD_LIBRARY_PATH=$ASP_ROOT/asp/analysis:$ASP_ROOT/asp/analysis/glog/lib:$LD_LIBRARY_PATH
+export GLOG_logtostderr=0
+export GLOG_log_dir=$ASP_ROOT/asp/analysis/log
+
+# load the changes
+$ source ~/.profile
+
+==========================================================================================
+
+# Add the following lines to specializers/stencil/stencil_kernel.py at the beginning of the file
+
+from asp.analysis.cpp_instrument import *
+
+# Add the following lines to specializers/stencil/stencil_kernel.py right before mod.add_function("kernel", variants, variant_names)
+        
+       ###########################################################################
+        # TRANSFORMATION TO ADD PARALLEL-FOR LOOPS
+        variants = cpp_parallel_for_loop_transformation(variants, variant_names)
+
+        # "BUGGY" C++ LEVEL TRANSFORMATION (HOIST INT VARIABLES OUT OF FOR LOOP)
+        variants = cpp_hoist_index_variable_transformation(variants, variant_names)
+
+        # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
+        variants = cpp_instrument_for_analysis(self, variants, variant_names, mod)
+        
+        ###########################################################################
+	
+# Change the following method for cpp_ast.For in cpp_ast.py
+def set_underlying_for(self, initialize = True):
+    if initialize:
+        self.start = Initializer(Value("int", self.loopvar), self.initial)
+    else:
+        self.start = Assign(CName(self.loopvar), self.initial)
+    self.condition = BinOp(CName(self.loopvar), "<=", self.end)
+    self.update = Assign(CName(self.loopvar), BinOp(CName(self.loopvar), "+", self.increment))
+	
+# Add the following method to cpp_ast.Statement in cpp_ast.py
+def generate(self, with_semicolon=False):
+    return super(Statement, self).generate()
+        
+In stencil_kernel.py: make arguments of replay: *args
+	
+==========================================================================================
