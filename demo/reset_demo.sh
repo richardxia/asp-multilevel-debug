@@ -10,6 +10,8 @@ COLOR_CPP=LightGray
 # 255 255 255
 COLOR_REPORT=white
 
+export GITHUB_ASP_ROOT=/media/sf_ASP/github/asp
+
 export ASP_ROOT=/home/vagrant/asp
 export DEMO_ROOT=$ASP_ROOT/demo
 export ANALYSIS_ROOT=$ASP_ROOT/asp/analysis
@@ -57,8 +59,8 @@ cp -f $DEMO_ROOT/demo_backups/test1_1.py $DEMO_ROOT/tests/test1.py
 cp -f $DEMO_ROOT/demo_backups/test2.py $DEMO_ROOT/tests/test2.py
 #cp -f $DEMO_ROOT/demo_backups/stencil_convert.py $STENCIL_ROOT/stencil_convert.py
 #cp -f $DEMO_ROOT/demo_backups/stencil_kernel.py $STENCIL_ROOT/stencil_kernel.py
-sudo cp -f /usr/lib/pymodules/python2.6/unittest2/runner.py /usr/lib/pymodules/python2.6/unittest2/runner.py.backup
-sudo cp -f $DEMO_ROOT/demo_backups/runner.py /usr/lib/pymodules/python2.6/unittest2/runner.py
+#sudo cp -f /usr/lib/pymodules/python2.6/unittest2/runner.py /usr/lib/pymodules/python2.6/unittest2/runner.py.backup
+#sudo cp -f $DEMO_ROOT/demo_backups/runner.py /usr/lib/pymodules/python2.6/unittest2/runner.py
 
 # revert back code cache
 if [ ! -d "/tmp/asp_cache/" ]; then
@@ -133,13 +135,13 @@ runtest2 () {
 
 reset_demo () {
     rm -rf $ASP_ROOT/asp/analysis
-    cp -rf /media/sf_ASP/asp/asp/analysis/ $ASP_ROOT/asp/analysis
+    cp -rf $GITHUB_ASP_ROOT/asp/analysis/ $ASP_ROOT/asp/analysis
 
     rm -rf $ASP_ROOT/demo
-    cp -rf /media/sf_ASP/asp/demo/ $ASP_ROOT/demo
+    cp -rf $GITHUB_ASP_ROOT/demo/ $ASP_ROOT/demo
 
     rm -rf $ASP_ROOT/specializers/stencil
-    cp -rf /media/sf_ASP/asp/specializers/stencil/ $ASP_ROOT/specializers/stencil
+    cp -rf $GITHUB_ASP_ROOT/specializers/stencil/ $ASP_ROOT/specializers/stencil
 
     source $DEMO_ROOT/reset_demo.sh
 }
