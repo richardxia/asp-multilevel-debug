@@ -239,7 +239,11 @@ class For(RawFor):
             body)
 
     def set_underlying_for(self):
-        self.start = Initializer(Value("int", self.loopvar), self.initial)
+        #self.start = Initializer(Value("int", self.loopvar), self.initial)
+        if initialize:
+            self.start = Initializer(Value("int", self.loopvar), self.initial)
+        else:
+            self.start = Assign(CName(self.loopvar), self.initial)
         self.condition = BinOp(CName(self.loopvar), "<=", self.end)
         self.update = Assign(CName(self.loopvar), BinOp(CName(self.loopvar), "+", self.increment))
 
@@ -352,6 +356,9 @@ class Statement(codepy.cgen.Statement):
         node = ElementTree.Element("Statement")
         node.text = self.text
         return node
+
+    def generate(self, with_semicolon=False):
+        return super(Statement, self).generate()
 
 class Assign(codepy.cgen.Assign):
     def __init__(self, lvalue, rvalue):
