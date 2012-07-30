@@ -238,7 +238,7 @@ class For(RawFor):
             Assign(CName(self.loopvar), BinOp(CName(self.loopvar), "+", self.increment)),
             body)
 
-    def set_underlying_for(self):
+    def set_underlying_for(self, initialize = True):
         #self.start = Initializer(Value("int", self.loopvar), self.initial)
         if initialize:
             self.start = Initializer(Value("int", self.loopvar), self.initial)

@@ -137,6 +137,9 @@ reset_demo () {
     rm -rf $ASP_ROOT/asp/analysis
     cp -rf $GITHUB_ASP_ROOT/asp/analysis/ $ASP_ROOT/asp/analysis
 
+    rm -rf $ASP_ROOT/asp/codegen
+    cp -rf $GITHUB_ASP_ROOT/asp/codegen/ $ASP_ROOT/asp/codegen
+
     rm -rf $ASP_ROOT/demo
     cp -rf $GITHUB_ASP_ROOT/demo/ $ASP_ROOT/demo
 

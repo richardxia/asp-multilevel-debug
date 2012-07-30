@@ -30,6 +30,9 @@ from stencil_logging_transform import StencilLoggingTransform
 from stencil_logging_transform import _log_read
 from asp.verify import SpecializationError
 
+# (elmas): for the c++ parallelism analysis
+from asp.analysis.cpp_instrument import *
+
 def get_func(code, fname, binder=None):
     exec code
     func = eval(fname)
@@ -205,6 +208,19 @@ class StencilKernel(object):
         self.add_libraries(mod)
 
         self.set_compiler_flags(mod)
+
+        ###########################################################################
+        # TRANSFORMATION TO ADD PARALLEL-FOR LOOPS
+        variants = cpp_parallel_for_loop_transformation(variants, variant_names)
+
+        # "BUGGY" C++ LEVEL TRANSFORMATION (HOIST INT VARIABLES OUT OF FOR LOOP)
+        variants = cpp_hoist_index_variable_transformation(variants, variant_names)
+
+        # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
+        variants = cpp_instrument_for_analysis(self, variants, variant_names, mod)
+        
+        ###########################################################################
+        
         mod.add_function("kernel", variants, variant_names)
 
         # package arguments and do the call 
