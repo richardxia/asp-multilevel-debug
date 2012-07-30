@@ -1,0 +1,97 @@
+(Before the demo, reset the files)
+
+$ ./reset_demo.sh
+
+First I will demonstrate a bug which can be detected by normal testing, which is
+not novel in this work. We will run Python code without specialization.
+
+(Assuming that you are in the specializers/stencil/ directory)
+
+$ ./run_test1.sh
+(You should see an AssertionError)
+
+Since the original Python code fails this test case, we know it must be an error
+in the Python code. If we inspect the Python code, we see that there is a minus
+(-) where there should be a plus (+). By fixing this the test case passes.
+
+$ vim tests/test1.py
+  comment out line 17, uncomment line 18
+  save and quit
+
+$ ./run_test1.sh
+(Test case should pass)
+
+There is a different type of bug that cannot be detected this way. If there is
+an error in the specialization, then it may also raise an error. We will now run
+the specializer instead of the pure Python implementation.
+
+$ vim tests/test1.py
+  comment out line 27 (kernel.pure_python = True)
+  save and quit
+
+$ ./run_test1.sh
+(You should see an AssertionError)
+
+We now know that there is a bug later in the pipeline, but we do not know where.
+We can now use replaying to determine whether there is a problem in the code
+lowering to C++ or in the user understanding of the non-deterministic DSL.
+
+$ vim tests/test1.py
+  uncomment line 28 (kernel.should_trace = True)
+  uncomment lines 31-32 ( out_grid = ...; kernel.replay(...) )
+  save and quit
+
+$ ./run_test1.sh
+(You should see a SpecializationError)
+
+This tells us that when we try to replay the Python using the loop ordering
+determined from the specialized code, we obtain different output values. Now we
+know that the bug exists in the specialization. After inspecting the code, we
+determine that it was due to incorrectly setting all arithmetic operations to
+plus (+). When we fix this, the test case passes.
+
+$ vim stencil_convert.py
+  comment line 123
+  uncomment line 126
+  (Both are in def visit_ScalarBinOp():)
+
+$ ./run_test1.sh
+(You should see No SpecializationError and the test should pass)
+
+Now, there is one last type of bug that we may have. A user may be making
+incorrect assumptions about the nondeterministic properties of a specializer.
+In this case, the original Python code may pass a test case due to the default
+loop ordering, but the specialized code may reorder loops and fail the test
+case. By replaying the Python code with the loop ordering obtained from the
+C++ execution, we can determine whether the error lies in the lowering or
+from the conversion to nondeterministic Python.
+
+First we run the original Python:
+
+$ ./run_test2.sh
+(The test should pass)
+
+As we can see, there are no errors.
+
+Now, we run the specialized code:
+
+$ vim run_test2.sh
+  comment out line 27 (kernel.pure_python = True)
+
+$ ./run_test2.sh
+(You should see an AssertionError)
+
+We run the replaying mechanism to determine the cause of the bug.
+
+$ vim run_test2.sh
+  uncomment line 28 (kernel.should_trace = True)
+  uncomment lines 31-32 ( kernel.out_grid = ...; kernel.replay(...) )
+
+$ ./run_test2.sh
+(You should see an AssertionError, but No SpecializationError)
+
+This tells us that the replayed Python matches the C++ execution, implying that
+the user has misused the specializer. By inspecting the code, we see that the
+user is using a non-commutative operation and has assumed a specific iteration
+ordering which happened to be true for the original Python implementation but
+not the specialized C++ code.
