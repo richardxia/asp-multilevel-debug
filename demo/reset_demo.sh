@@ -16,8 +16,9 @@ export ASP_ROOT=/home/vagrant/asp
 export DEMO_ROOT=$ASP_ROOT/demo
 export ANALYSIS_ROOT=$ASP_ROOT/asp/analysis
 export STENCIL_ROOT=$ASP_ROOT/specializers/stencil
+export TINYCU_ROOT=$ASP_ROOT/specializers/tinycu
 
-export PYTHONPATH=$ASP_ROOT:$ASP_ROOT/asp:$ASP_ROOT/asp/codegen:$ANALYSIS_ROOT:$STENCIL_ROOT:$PYTHONPATH
+export PYTHONPATH=$ASP_ROOT:$ASP_ROOT/asp:$ASP_ROOT/asp/codegen:$ASP_ROOT/specializers:$ANALYSIS_ROOT:$STENCIL_ROOT:$TINYCU_ROOT:$PYTHONPATH
 export LD_LIBRARY_PATH=$ANALYSIS_ROOT:$ANALYSIS_ROOT/glog/lib:$LD_LIBRARY_PATH
 export GLOG_logtostderr=0
 export GLOG_log_dir=$ANALYSIS_ROOT/log
@@ -133,6 +134,17 @@ runtest2 () {
     PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $DEMO_ROOT/tests/test2.py
 }
 
+run_dp () {
+	PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $TINYCU_ROOT/tests/dot_product.py
+}
+
+demo_commands () {
+	echo "opentest1 oldtest1 newtest1 opentest2 openkernel"
+	echo "openconvert opencpp openbuggy opencppbuggy openuninst"
+	echo "openinst openreport opentrace runtest1 runtest2"
+	echo "run_dp"  
+}
+
 reset_demo () {
     rm -rf $ASP_ROOT/asp/analysis
     cp -rf $GITHUB_ASP_ROOT/asp/analysis/ $ASP_ROOT/asp/analysis
@@ -145,6 +157,9 @@ reset_demo () {
 
     rm -rf $ASP_ROOT/specializers/stencil
     cp -rf $GITHUB_ASP_ROOT/specializers/stencil/ $ASP_ROOT/specializers/stencil
+
+    rm -rf $ASP_ROOT/specializers/tinycu
+    cp -rf $GITHUB_ASP_ROOT/specializers/tinycu/ $ASP_ROOT/specializers/tinycu
 
     source $DEMO_ROOT/reset_demo.sh
 }
