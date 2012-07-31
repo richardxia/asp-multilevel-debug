@@ -32,6 +32,7 @@ export INSERT_PARLOOP=1
 export TEST_NAME=TestKernel
 
 # compile cpp analysis code
+echo "Compiling C++ parallelism analysis code"
 cd $ANALYSIS_ROOT
 make clean
 make all
@@ -134,6 +135,10 @@ runtest2 () {
     PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $DEMO_ROOT/tests/test2.py
 }
 
+run_maptests () {
+	PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $TINYCU_ROOT/tests/map_tests.py
+}
+
 run_dp () {
 	PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $TINYCU_ROOT/tests/dot_product.py
 }
@@ -142,10 +147,17 @@ demo_commands () {
 	echo "opentest1 oldtest1 newtest1 opentest2 openkernel"
 	echo "openconvert opencpp openbuggy opencppbuggy openuninst"
 	echo "openinst openreport opentrace runtest1 runtest2"
-	echo "run_dp"  
+	echo "run_maptests run_dp"  
 }
 
 reset_demo () {
+	echo "cd $HOME$"
+
+	MYPWD=`pwd`
+	cd $HOME
+
+	echo "Copying asp files"
+
 	rm -rf $ASP_ROOT
 	cp -rf $GITHUB_ASP_ROOT/ $ASP_ROOT
 
@@ -165,5 +177,7 @@ reset_demo () {
     #cp -rf $GITHUB_ASP_ROOT/specializers/tinycu/ $ASP_ROOT/specializers/tinycu
 
     source $DEMO_ROOT/reset_demo.sh
+    
+    cd $MYPWD
 }
 
