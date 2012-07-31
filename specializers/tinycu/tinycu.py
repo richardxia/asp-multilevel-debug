@@ -47,7 +47,7 @@ class TinyCu(object):
         import asp.codegen.templating.template as template
         return template.Template("""
         boost::python::list returner(${','.join(["boost::python::list "+i for i in argnames])}) {
-          boost::python::list ret; // = new boost::python::list;
+          boost::python::list *ret = new boost::python::list;
 
           // unpack into vectors
           % for x in argnames:
@@ -62,11 +62,9 @@ class TinyCu(object):
           std::cout << "\\nSIZEAGAIN: " << foo->size();
 //          BOOST_FOREACH(double it, foo) ret->append(it);
           for (int i=0; i<foo->size(); i++)
-            ret.append((*foo)[i]);
-//            ret->append((*foo)[i]);
+            ret->append((*foo)[i]);
 
-//          return *ret;
-          return ret;
+          return *ret;
 
         }""", disable_unicode=True).render(argnames=argnames)
 

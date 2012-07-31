@@ -56,7 +56,7 @@ class TinyCuConverter(NodeTransformer):
             cpp_ast.Assign(cpp_ast.Value("std::vector<double>*", inner_name), cpp_ast.Call("new std::vector<double>", ["*"+str(name)])),
             cpp_ast.For("i",
                             0,
-                            cpp_ast.Call(str(name)+"->size",[]),
+                            cpp_ast.BinOp(cpp_ast.Call(str(name)+"->size",[]), "-", cpp_ast.CNumber(1)),
                             1,
                             cpp_ast.Block(contents=[
                                 cpp_ast.Assign(cpp_ast.Subscript(cpp_ast.CName("(*"+inner_name+")"), "i"),
@@ -85,7 +85,7 @@ class TinyCuConverter(NodeTransformer):
                 cpp_ast.Assign(cpp_ast.Value("double", "accum"), cpp_ast.CNumber(0.0)),
                 cpp_ast.For("sum_i",
                             0,
-                            cpp_ast.Call(str(name)+"->size", []),
+                            cpp_ast.BinOp(cpp_ast.Call(str(name)+"->size", []), "-", cpp_ast.CNumber(1)),
                             1,
                             cpp_ast.Block(contents=[
                                 cpp_ast.Assign(#cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CNumber(0)),
@@ -111,7 +111,7 @@ class TinyCuConverter(NodeTransformer):
                 cpp_ast.Assign(cpp_ast.Value("double", "accum"), cpp_ast.CNumber(0.0)),
                 cpp_ast.For("sum_i",
                             0,
-                            cpp_ast.Call(str(name)+"->size", []),
+                            cpp_ast.BinOp(cpp_ast.Call(str(name)+"->size", []), "-", cpp_ast.CNumber(1)),
                             1,
                             cpp_ast.Block(contents=[
                                 cpp_ast.Assign(#cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CNumber(0)),

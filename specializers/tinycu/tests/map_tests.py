@@ -13,8 +13,6 @@ class MapTests(unittest.TestCase):
         b = MyMapTest()
         print b.intercept_call()
         self.assertEqual(b(), [2,4,6,8])
-        
-        print "Done with test_full"
 
 
     def test_2arity(self):
@@ -27,8 +25,6 @@ class MapTests(unittest.TestCase):
 
         b = MyMapTest()
         self.assertEqual(b.intercept_call(), [6,8,10,12])
-        
-        print "Done with test_2arity"
 
 
 if __name__ == '__main__':
