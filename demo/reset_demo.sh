@@ -65,9 +65,10 @@ cp -f $DEMO_ROOT/demo_backups/test2.py $DEMO_ROOT/tests/test2.py
 #sudo cp -f $DEMO_ROOT/demo_backups/runner.py /usr/lib/pymodules/python2.6/unittest2/runner.py
 
 # revert back code cache
-if [ ! -d "/tmp/asp_cache/" ]; then
-    mkdir /tmp/asp_cache/
+if [ -d "/tmp/asp_cache" ]; then
+	rm -rf /tmp/asp_cache
 fi
+mkdir -p /tmp/asp_cache
 cp -rf $DEMO_ROOT/asp_cache/* /tmp/asp_cache/
 
 export PYTHON=python
