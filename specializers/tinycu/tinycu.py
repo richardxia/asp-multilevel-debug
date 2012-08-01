@@ -44,7 +44,7 @@ class TinyCu(object):
         
         # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
         # Note: takes lists of variants/names and returns a new list of the given length
-        [cpp_ast2] = cpp_instrument_for_analysis(self, [cpp_ast2], ["cpp_ast2"], self.mod, CollKind.Vector)
+        [cpp_ast2] = cpp_instrument_for_analysis(self, [cpp_ast2], ["cpp_ast2"], self.mod)
         print str(cpp_ast2)
         
         ###########################################################################
