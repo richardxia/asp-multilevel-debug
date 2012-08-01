@@ -218,12 +218,14 @@ public:
 	: AccessBase(type, tx, int_address(base, offset), int_address(base), base_name, offset, offset_name),
 	  base_(base) {}
 
-	~Access(){}
+	virtual ~Access(){}
 
 	// perform the actual read from base[offset]
-	T DoRead();
+	virtual T DoRead();
 	// perform the actual write of value to base[offset]
-	void DoWrite(T value);
+	virtual void DoWrite(T value);
+
+	virtual double double_value();
 
 	static inline ADDRINT int_address(T* base, int offset = 0) {
 		if(offset < 0) offset = 0;
@@ -236,14 +238,45 @@ public:
 				(this->value_ != static_cast<Access<T>*>(that)->value_);
 	}
 
-	inline double double_value() {
-		return static_cast<double>(value_);
-	}
-
 private:
 	DECL_FIELD(T*, base)
 	DECL_FIELD(T, value)
 };
+
+/************************************************************************/
+
+template<typename T>
+class VectorAccess : public Access<T> {
+	typedef Access<T> super;
+public:
+	VectorAccess(AccessType type,
+			Transaction* tx,
+			std::vector<T>* base,
+			const char* base_name = NULL,
+			int offset = -1,
+			const char* offset_name = NULL)
+	: Access<T>(type, tx, reinterpret_cast<T*>(base), base_name, offset, offset_name),
+	  vbase_(base) {}
+
+	~VectorAccess(){}
+
+	// perform the actual read from base[offset]
+	T DoRead();
+	// perform the actual write of value to base[offset]
+	void DoWrite(T value);
+
+	double double_value();
+
+private:
+	DECL_FIELD(std::vector<T>*, vbase)
+};
+
+/************************************************************************/
+
+template<typename T>
+double Access<T>::double_value() {
+	return static_cast<double>(value_);
+}
 
 /************************************************************************/
 
@@ -267,6 +300,34 @@ void Access<T>::DoWrite(T value) {
 
 /************************************************************************/
 
+template<typename T>
+double VectorAccess<T>::double_value() {
+	assert(AccessBase::offset_ >= 0);
+	return static_cast<double>((*vbase_)[AccessBase::offset_]);
+}
+
+/************************************************************************/
+
+template<typename T>
+T VectorAccess<T>::DoRead() {
+	assert(AccessBase::offset_ >= 0);
+	assert(AccessBase::type_ == READ);
+	super::value_ = (*vbase_)[AccessBase::offset_];
+	return super::value_;
+}
+
+/************************************************************************/
+
+template<typename T>
+void VectorAccess<T>::DoWrite(T value) {
+	assert(AccessBase::offset_ >= 0);
+	assert(AccessBase::type_ == WRITE);
+	super::value_ = value;
+	(*vbase_)[AccessBase::offset_] = super::value_;
+}
+
+/************************************************************************/
+
 // functions to call from kernels to create a new access object
 
 template<typename T>
@@ -285,6 +346,26 @@ inline Access<T>* NewWriteAccess(Transaction* tx,
 						int offset = -1,
 						const char* offset_name = NULL) {
 	return new Access<T>(WRITE, tx, base, base_name, offset, offset_name);
+}
+
+/************************************************************************/
+
+template<typename T>
+inline Access<T>* NewReadAccess(Transaction* tx,
+						std::vector<T>& base,
+						const char* base_name = NULL,
+						int offset = -1,
+						const char* offset_name = NULL) {
+	return new VectorAccess<T>(READ, tx, &base, base_name, offset, offset_name);
+}
+
+template<typename T>
+inline Access<T>* NewWriteAccess(Transaction* tx,
+						std::vector<T>& base,
+						const char* base_name = NULL,
+						int offset = -1,
+						const char* offset_name = NULL) {
+	return new VectorAccess<T>(WRITE, tx, &base, base_name, offset, offset_name);
 }
 
 /************************************************************************/

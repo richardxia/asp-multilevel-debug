@@ -38,11 +38,13 @@ class TinyCu(object):
         # optimize just the main function for now
         cpp_ast2 = TinyCuOptimizer().optimize(cpp_ast)
 #        cpp_ast2 = cpp_ast
+        print str(cpp_ast2)
 
         ###########################################################################
         
         # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
-        cpp_ast2 = cpp_instrument_for_analysis(self, [cpp_ast2], ["cpp_ast2"], self.mod)
+        # Note: takes lists of variants/names and returns a new list of the given length
+        [cpp_ast2] = cpp_instrument_for_analysis(self, [cpp_ast2], ["cpp_ast2"], self.mod, CollKind.Vector)
         print str(cpp_ast2)
         
         ###########################################################################
