@@ -19,7 +19,7 @@ export STENCIL_ROOT=$ASP_ROOT/specializers/stencil
 export TINYCU_ROOT=$ASP_ROOT/specializers/tinycu
 
 export PYTHONPATH=$ASP_ROOT:$ASP_ROOT/asp:$ASP_ROOT/asp/codegen:$ASP_ROOT/specializers:$ANALYSIS_ROOT:$STENCIL_ROOT:$TINYCU_ROOT:$PYTHONPATH
-export LD_LIBRARY_PATH=$ANALYSIS_ROOT:$ANALYSIS_ROOT/glog/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$ANALYSIS_ROOT:$ANALYSIS_ROOT/glog/lib:/usr/local/lib:$LD_LIBRARY_PATH
 export GLOG_logtostderr=0
 export GLOG_log_dir=$ANALYSIS_ROOT/log
 
@@ -144,11 +144,16 @@ run_dp () {
 	PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $TINYCU_ROOT/tests/dot_product.py
 }
 
+run_variance () {
+	PYTHONPATH=`pwd`:${PYTHONPATH} ${PYTHON} ${PYTHONARGS} $TINYCU_ROOT/tests/variance.py
+}
+
+
 demo_commands () {
 	echo "opentest1 oldtest1 newtest1 opentest2 openkernel"
 	echo "openconvert opencpp openbuggy opencppbuggy openuninst"
 	echo "openinst openreport opentrace runtest1 runtest2"
-	echo "run_maptests run_dp"  
+	echo "run_maptests run_dp run_variance"  
 }
 
 reset_demo () {

@@ -19,6 +19,8 @@
 #include <set>
 #include <list>
 
+#include <boost/filesystem.hpp>
+
 #include <glog/logging.h>
 #define _LOG_ LOG(INFO)
 

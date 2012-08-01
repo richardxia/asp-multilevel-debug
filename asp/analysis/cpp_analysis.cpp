@@ -213,6 +213,19 @@ void AspEventHandler::BeginParallel(ForLoopInfo* f) {
 	assert(txlist_sorted_.empty());
 	assert(memToLastAccess_.empty());
 
+	// clear log directory
+	char buff[256];
+	assert(ASP_ROOT != NULL);
+	sprintf(buff, "%s/asp/analysis/log", ASP_ROOT);
+	boost::filesystem::path p(buff);
+	if(boost::filesystem::exists(p)) {
+		boost::filesystem::remove_all(p);
+	}
+	boost::filesystem::create_directories(p);
+
+	// delete the trace file
+	boost::filesystem::remove("/tmp/trace.txt");
+
 	fprintf(report_file_, "Parallel loop: %s\n\n", f->ToString(true).c_str());
 }
 
