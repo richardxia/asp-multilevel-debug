@@ -4,6 +4,9 @@ from tinycu_converter import *
 from tinycu_optimizer import *
 from asp.jit import asp_module
 
+# (elmas): for the c++ parallelism analysis
+from asp.analysis.cpp_instrument import *
+
 class TinyCu(object):
     def __init__(self):
         # create Asp module to hold functions
@@ -35,6 +38,14 @@ class TinyCu(object):
         # optimize just the main function for now
         cpp_ast2 = TinyCuOptimizer().optimize(cpp_ast)
 #        cpp_ast2 = cpp_ast
+
+        ###########################################################################
+        
+        # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
+        cpp_ast2 = cpp_instrument_for_analysis(self, [cpp_ast2], ["cpp_ast2"], self.mod)
+        print str(cpp_ast2)
+        
+        ###########################################################################
 
         self.mod.backends["c++"].module.add_to_module([cpp_ast2])
 

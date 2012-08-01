@@ -4,6 +4,8 @@ import copy
 #import codepy.cgen
 import asp.codegen.cpp_ast as CppAst
 import asp.codegen.ast_tools as CppAstTools
+from tinycu_converter import CppLambda
+import codepy
 
 #############################################################################
 
@@ -45,12 +47,20 @@ def begin_test(kernel):
     
 #############################################################################
 
+def create_directories(filename):
+    dirname = os.path.dirname(filename)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+#############################################################################
+
 def save_variants_to_file(variants, variant_names, message, filename = "variants.cpp"):
     filename = os.path.join(TEST_WORK_DIR, filename)
     
+    create_directories(filename)
     with open(filename, 'w') as f:
         for (variant, name) in zip(variants, variant_names):
-            if name == "kernel_unroll_4":
+            #if name == "kernel_unroll_4":
                 f.write("// %s\n" % message)
                 #f.write("// Test: %s, Variant: %s\n" % (TEST_NAME, name))
                 f.write(str(variant))
@@ -281,11 +291,20 @@ class NodeInstrumentor(CppAstTools.NodeTransformer):
         self.in_parallel_for = False
         self.is_parallel_for = False
     
+    def generic_visit(self, node):
+        if isinstance(node, str) or isinstance(node, int):
+            return node
+        assert isinstance(node, codepy.cgen.Generable)
+        return super(NodeInstrumentor, self).generic_visit(node)
+    
     ############################################################
     
     def visit_FunctionBody(self, node):
         # update scope
-        self.enter_scope(node.fdecl.arg_decls)
+        if isinstance(node.fdecl, CppLambda):
+            self.enter_scope(node.fdecl.args)
+        else:
+            self.enter_scope(node.fdecl.arg_decls)
         node.body = self.visit(node.body)
         self.exit_scope()
         
