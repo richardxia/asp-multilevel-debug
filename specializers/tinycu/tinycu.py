@@ -42,6 +42,10 @@ class TinyCu(object):
 
         ###########################################################################
         
+        # "BUGGY" C++ LEVEL TRANSFORMATION (HOIST INT VARIABLES OUT OF FOR LOOP)
+        [cpp_ast2] = cpp_buggy_parallelism_transformation(self, [cpp_ast2], ["cpp_ast2"])
+        print str(cpp_ast2)
+        
         # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
         # Note: takes lists of variants/names and returns a new list of the given length
         [cpp_ast2] = cpp_instrument_for_analysis(self, [cpp_ast2], ["cpp_ast2"], self.mod)

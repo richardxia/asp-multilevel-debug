@@ -211,10 +211,10 @@ class StencilKernel(object):
 
         ###########################################################################
         # TRANSFORMATION TO ADD PARALLEL-FOR LOOPS
-        variants = cpp_parallel_for_loop_transformation(variants, variant_names)
+        variants = cpp_parallel_for_loop_transformation(self, variants, variant_names)
 
         # "BUGGY" C++ LEVEL TRANSFORMATION (HOIST INT VARIABLES OUT OF FOR LOOP)
-        variants = cpp_hoist_index_variable_transformation(variants, variant_names)
+        variants = cpp_hoist_index_variable_transformation(self, variants, variant_names)
 
         # C++ LEVEL INSTRUMENTATION FOR CHECKING PARALLELISM ERRORS
         variants = cpp_instrument_for_analysis(self, variants, variant_names, mod)

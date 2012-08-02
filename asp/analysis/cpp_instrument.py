@@ -23,9 +23,16 @@ def log(*args):
 #############################################################################
 
 def begin_test(kernel):
+    if hasattr(kernel, "begin_test") and kernel.begin_test:
+        return
+    
+    kernel.begin_test = True
+    
     global TEST_NAME, TEST_WORK_DIR
     TEST_NAME = kernel.__class__.__name__
     TEST_WORK_DIR = os.path.join(WORK_DIR, TEST_NAME)
+    
+    os.environ["TEST_NAME"] = TEST_NAME
     
     # delete test directory in work
     #if os.path.exists(TEST_WORK_DIR):
@@ -510,11 +517,21 @@ class NodeInstrumentor(CppAstTools.NodeTransformer):
 #############################################################################
 #############################################################################
 
-def cpp_hoist_index_variable_transformation(variants, variant_names):
+def cpp_hoist_index_variable_transformation(kernel, variants, variant_names):
+    return cpp_buggy_parallelism_transformation(kernel, variants, variant_names)
+
+#############################################################################
+
+def cpp_buggy_parallelism_transformation(kernel, variants, variant_names):
+    assert isinstance(variants, list)
+    assert isinstance(variant_names, list)
+    assert 0 < len(variants) == len(variant_names)
     
     if not INSERT_BUG:
         return variants
         
+    begin_test(kernel)
+    
     # print correct variants to a file
     save_variants_to_file(variants, variant_names, "CORRECT C++ CODE BEFORE OPTIMIZATION", "variants.cpp")
         
@@ -556,7 +573,12 @@ class BugInstrumentor(CppAstTools.NodeTransformer):
             return node
         
     ############################################################
+    def visit_UnbracedBlock(self, node):
+        node = visit_Block(node)
+        assert isinstance(node, CppAst.UnbracedBlock)
+        return node
     
+    ############################################################
     def visit_Block(self, node):
         i = 0
         while i < len(node.contents):
@@ -587,16 +609,25 @@ class BugInstrumentor(CppAstTools.NodeTransformer):
                             node.contents.insert(i, v)
                             if BUG_MAKE_HOISTED_VARS_SHARED:
                                 x.value += " shared(%s)" % v.name
+                    
+                    if BUG_REMOVE_REDUCTION_PRAGMA:
+                        # check if there is any reduction pragma
+                        loc = x.value.find("reduction")
+                        if loc > -1:
+                            assert loc > 0
+                            x.value = x.value[:loc-1]
             i += 1
         return node
         
 #############################################################################
 #############################################################################
 
-def cpp_parallel_for_loop_transformation(variants, variant_names):
+def cpp_parallel_for_loop_transformation(kernel, variants, variant_names):
     
     if not INSERT_PARLOOP:
         return variants
+        
+    begin_test(kernel)
         
     inst_variants = []
     for variant in variants:

@@ -15,6 +15,7 @@ export GITHUB_ASP_ROOT=/media/sf_ASP/github/asp
 export ASP_ROOT=/home/vagrant/asp
 export DEMO_ROOT=$ASP_ROOT/demo
 export ANALYSIS_ROOT=$ASP_ROOT/asp/analysis
+export WORK_DIR=$ANALYSIS_ROOT/work
 export STENCIL_ROOT=$ASP_ROOT/specializers/stencil
 export TINYCU_ROOT=$ASP_ROOT/specializers/tinycu
 
@@ -27,9 +28,6 @@ export GLOG_log_dir=$ANALYSIS_ROOT/log
 export INSTRUMENT_CPP=1
 export INSERT_BUG=1
 export INSERT_PARLOOP=1
-
-# name of the test
-export TEST_NAME=TestKernel
 
 # compile cpp analysis code
 echo "Compiling C++ parallelism analysis code"
@@ -46,7 +44,6 @@ if [ -h "$DEMO_ROOT/work" ]; then
 fi
 ln -s $ANALYSIS_ROOT/work/ $DEMO_ROOT/work
 rm -rf $DEMO_ROOT/work/*
-mkdir $DEMO_ROOT/work/$TEST_NAME
 
 # link ~/asp/asp/analysis/log/ to ~/asp/demo/log
 if [ -h "$DEMO_ROOT/log" ]; then
@@ -75,6 +72,10 @@ export PYTHON=python
 export PYTHONARGS="-W ignore::DeprecationWarning"
 
 # commands to open and run files
+
+settest () {
+	export TEST_NAME=$1
+}
 
 opentest1 () {
     emacs -bg $COLOR_TEST $DEMO_ROOT/tests/test1.py

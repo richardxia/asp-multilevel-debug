@@ -17,6 +17,7 @@ INSERT_PARLOOP = (os.environ["INSERT_PARLOOP"] == "1" if "INSERT_PARLOOP" in os.
 
 BUG_HOIST_LOOPINDEX = False
 BUG_HOIST_LOCALINTS = True
+BUG_REMOVE_REDUCTION_PRAGMA = True
 BUG_MAKE_HOISTED_VARS_SHARED = False
 
 #############################################################################
