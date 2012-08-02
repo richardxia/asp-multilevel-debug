@@ -362,6 +362,9 @@ class NodeInstrumentor(CppAstTools.NodeTransformer):
     def visit_Assign(self, node):
         tmp_state = self.state
         
+        if isinstance(node.lvalue, CppAst.Value):
+            self.enter_scope([node.lvalue])
+        
         self.state = State.RHS
         node.rvalue = self.visit(node.rvalue)
         
