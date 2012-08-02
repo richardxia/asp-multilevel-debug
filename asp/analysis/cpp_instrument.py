@@ -574,7 +574,7 @@ class BugInstrumentor(CppAstTools.NodeTransformer):
         
     ############################################################
     def visit_UnbracedBlock(self, node):
-        node = visit_Block(node)
+        node = self.visit_Block(node)
         assert isinstance(node, CppAst.UnbracedBlock)
         return node
     
@@ -589,6 +589,7 @@ class BugInstrumentor(CppAstTools.NodeTransformer):
             node.contents[i] = x
             
             if isinstance(x, CppAst.Pragma):
+                
                 if x.value.startswith("omp parallel for"):
                     pf = node.contents[i+1]
                     assert isinstance(pf, CppAst.For), "A For-Loop is expected after omp parallel for"
