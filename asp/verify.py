@@ -1,5 +1,7 @@
 import ast
 import asp.codegen.cpp_ast as cpp_ast
+import types
+import collections
 
 class NodeFinder(ast.NodeVisitor):
     '''Generic class for finding a specific node in an AST subtree.'''
@@ -75,3 +77,18 @@ class PrintLog(cpp_ast.Generable):
                 outputs.append(arg)
         outputs.append(cpp_ast.String(')'))
         return cls("_asp_log_file", outputs, True)
+
+def instrument_deepcopy(mod):
+    def new_deepcopy(self, memo):
+        new_obj = self.__old_deepcopy__(memo)
+        if hasattr(self, 'should_trace'):
+            new_obj.should_trace = self.should_trace
+        return new_obj
+
+    for key, cls in mod.__dict__.iteritems():
+        if type(cls) == type(object) and \
+                cls not in types.__dict__.values() and \
+                cls not in collections.__dict__.values() and \
+                hasattr(cls, '__deepcopy__'):
+            cls.__old_deepcopy__ = cls.__deepcopy__
+            cls.__deepcopy__ = new_deepcopy

@@ -11,6 +11,9 @@ import ast
 from asp.util import *
 import asp.codegen.ast_tools as ast_tools
 import asp.codegen.python_ast as ast
+import asp.verify as verify
+import stencil_model
+verify.instrument_deepcopy(stencil_model)
 
 # class to convert from Python AST to StencilModel
 class StencilPythonFrontEnd(ast_tools.NodeTransformer):
@@ -90,7 +93,7 @@ class StencilPythonFrontEnd(ast_tools.NodeTransformer):
         #return OutputAssignment(ScalarBinOp(target, node.op, self.visit(node.value), lineno=node.lineno, col_offset=node.col_offset))
         out = OutputAssignment(ScalarBinOp(target, node.op, self.visit(node.value), lineno=node.lineno, col_offset=node.col_offset))
         if self.should_trace:
-            out.should_trace = []
+            out.should_trace = True
         return out
 
     def visit_Assign(self, node):
@@ -99,17 +102,7 @@ class StencilPythonFrontEnd(ast_tools.NodeTransformer):
         #return OutputAssignment(self.visit(node.value))
         out = OutputAssignment(self.visit(node.value))
         if self.should_trace:
-            out.should_trace = []
-            # FIXME: Refactor this
-            import types
-            def new_deep_copy(self, memo):
-                tmp = self.old_deep_copy({})
-                tmp.old_deep_copy = tmp.__deepcopy__
-                tmp.__deepcopy__ = types.MethodType(new_deep_copy, tmp)
-                tmp.should_trace = self.should_trace
-                return tmp
-            out.old_deep_copy = out.__deepcopy__
-            out.__deepcopy__ = types.MethodType(new_deep_copy, out)
+            out.should_trace = True
         return out
 
     def visit_Subscript(self, node):
