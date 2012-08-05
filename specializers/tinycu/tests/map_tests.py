@@ -11,8 +11,9 @@ class MapTests(unittest.TestCase):
                 return map(self.func, [1,2,3,4])
 
         b = MyMapTest()
-        print b.intercept_call()
-        self.assertEqual(b(), [2,4,6,8])
+        result = b.intercept_call()
+        print result
+        self.assertEqual(result, [2,4,6,8])
 
 
     def test_2arity(self):

@@ -15,6 +15,7 @@ Expr =  Constant
           | FunctionReturn
           | CuMap
           | CuSum
+          | CuReduce
           | CuList
 
 # a map of func applied to some data
@@ -22,6 +23,9 @@ CuMap(func=(Identifier | Attribute), data=(CuList | Identifier)*)
 
 # a sum operation
 CuSum(data = (CuList | Identifier | CuMap))
+
+# a general reduction operation
+CuReduce(func=(Identifier | Attribute), data=(CuList | Identifier)*)
 
 # a Python list that is turned into doubles or ints
 CuList(elements=(Constant | Identifier)*)

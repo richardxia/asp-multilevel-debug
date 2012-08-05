@@ -30,6 +30,9 @@ class TinyCuFrontend(NodeTransformer):
         if isinstance(node.func, python_ast.Name) and node.func.id == "sum":
             return CuSum(self.visit(node.args[0]))
 
+        if isinstance(node.func, python_ast.Name) and node.func.id == "reduce":
+            return CuReduce(self.visit(node.args[0]), [self.visit(x) for x in node.args[1:]])
+
     def visit_Name(self, node):
         return Identifier(node.id)
     

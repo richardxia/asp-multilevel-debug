@@ -127,6 +127,78 @@ class TinyCuConverter(NodeTransformer):
             return cpp_ast.Call(cpp_ast.FunctionBody(CppLambda("&", cpp_ast.Value("std::vector<double>*", ""), [cpp_ast.Value("std::vector<double>*", name)]),
                                                      cpp_ast.Block(contents=block)),[self.visit(node.data)])
 
+    def visit_CuReduce(self, node):
+        # /* Assume that data has a number of items equal to a positive power of 2 */
+        # [&]()->double
+        # {
+        #   std::vector<double>* tmp = new std::vector<double>(data, data + data.size()/sizeof(double));
+        #   unsigned int depth = 0;
+        #   for (size_t data_len = data.size(); data_len > 0; data_len >>= 1) {
+        #       depth++;
+        #   }
+        #   for (size_t row = 0; row < depth; row++) {
+        #       size_t width = 1 << (depth - row);
+        #       size_t stride = 1 << (row + 1);
+        #       // omp for
+        #       for (size_t col = 0; col < width; col++) {
+        #           tmp[col * stride] = func(tmp[col * stride], tmp[col * stride + (1 << row));
+        #       }
+        #   }
+        #   return tmp[0];
+        # }(func, data)
+        print "IN CUREDUCE"
+        print node.func
+        names = [self.visit(x) for x in node.data]
+        name = names[0]
+        inner_name = str(name)+"_inner"
+        block = [
+            cpp_ast.Assign(cpp_ast.Value("std::vector<double>*", inner_name), cpp_ast.Call("new std::vector<double>", ["*"+str(name)])),
+
+            # Computing tree depth (log2(data.size()))
+            cpp_ast.Assign(cpp_ast.Value("unsigned int", "depth"), cpp_ast.CNumber(0)),
+            cpp_ast.RawFor(cpp_ast.Assign(cpp_ast.Value("size_t", "data_len"), cpp_ast.Call(inner_name+"->size", [])),
+                "data_len > 1", "data_len = data_len >> 1",
+                cpp_ast.Block(contents=[cpp_ast.Assign(cpp_ast.CName("depth"), cpp_ast.BinOp(cpp_ast.CName("depth"), "+", cpp_ast.CNumber(1)))])
+                ),
+
+            # Using a RawFor for outer loop to prevent omp parallel optimization
+            cpp_ast.RawFor(
+                cpp_ast.Assign(cpp_ast.Value("size_t", "row"), cpp_ast.CNumber(0)),
+                cpp_ast.BinOp(cpp_ast.CName("row"), "<", cpp_ast.CName("depth")),
+                cpp_ast.Assign(cpp_ast.CName("row"), cpp_ast.BinOp(cpp_ast.CName("row"), "+", cpp_ast.CNumber(1))),
+                cpp_ast.Block(contents=[
+                    cpp_ast.Assign(cpp_ast.Value("size_t", "width"), cpp_ast.BinOp(cpp_ast.CNumber(1), "<<", cpp_ast.BinOp(cpp_ast.BinOp(cpp_ast.CName("depth"), "-", cpp_ast.CName("row")), "-", cpp_ast.CNumber(1)))),
+                    cpp_ast.Assign(cpp_ast.Value("size_t", "stride"), cpp_ast.BinOp(cpp_ast.CNumber(1), "<<", cpp_ast.BinOp(cpp_ast.CName("row"), "+", cpp_ast.CNumber(1)))),
+                    cpp_ast.For("col",
+                        0,
+                        cpp_ast.BinOp(cpp_ast.CName("width"), "-", cpp_ast.CNumber(1)),
+                        1,
+                        cpp_ast.Block(contents=[
+                            cpp_ast.Assign(
+                                cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride"))),
+                                cpp_ast.Call(self.visit(node.func), [
+                                    cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride"))),
+                                    cpp_ast.Subscript("(*"+inner_name+")",
+                                        cpp_ast.BinOp(
+                                            cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride")),
+                                            "+",
+                                            cpp_ast.BinOp(cpp_ast.CNumber(1), "<<", cpp_ast.CName("row"))
+                                            )
+                                        ),
+                                    ]),
+                                ),
+                            ]),
+                        ),
+                    ]),
+                ),
+
+            cpp_ast.Call(inner_name+"->resize", [1]),
+            cpp_ast.ReturnStatement(cpp_ast.CName(inner_name)),
+        ]
+        return cpp_ast.Call(cpp_ast.FunctionBody(CppLambda("&", cpp_ast.Value("std::vector<double>*", ""), []),
+                            cpp_ast.Block(contents=block)),
+                            [])
+
 
         
 
