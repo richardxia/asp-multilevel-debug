@@ -1,10 +1,9 @@
 import unittest2 as unittest
 from tinycu import *
 
-# Redefine Python's reduce to return a list
-old_reduce = reduce
-def reduce(*args):
-    return [old_reduce(*args)]
+# Redefine Python's reduce
+def reduce(func, arr):
+    return TinyCuReducer.reduce(func, arr)
 
 class ReduceTests(unittest.TestCase):
     
@@ -39,9 +38,13 @@ class ReduceTests(unittest.TestCase):
             def __call__(self, *args):
                 return reduce(self.func, [1,2,3,4])
 
-        b = MyReduceTest()
+        #b = MyReduceTest()
+        b = MyReduceTest(should_trace=True)
+        #b = MyReduceTest(pure_python=True)
         result = b.intercept_call()
+        #result = b()
         print(result)
+        result = b.replay()
         self.assertEqual(result, [19])
 
 if __name__ == '__main__':

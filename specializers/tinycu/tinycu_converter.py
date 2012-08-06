@@ -2,6 +2,7 @@ from asp.codegen.ast_tools import *
 from tinycu_sm import *
 import asp.codegen.python_ast as python_ast
 import asp.codegen.cpp_ast as cpp_ast
+import asp.verify as verify
 
 class CppLambda(cpp_ast.FunctionBody):
     def __init__(self, capture, rettype, args):
@@ -14,6 +15,10 @@ class CppLambda(cpp_ast.FunctionBody):
         yield "[" + str(self.capture) + "]" + "(" + ",".join([str(x)[0:-1] for x in self.args]) + ")" + "->" + str(self.rettype)[0:-1]
 
 class TinyCuConverter(NodeTransformer):
+    def __init__(self, should_trace=False):
+        super(TinyCuConverter, self).__init__()
+        self.should_trace = should_trace
+
     def convert(self, sm):
         # other_funcs is a list of other functions referenced by the current function.
         # the top-level class will ensure these are all translated
@@ -21,6 +26,9 @@ class TinyCuConverter(NodeTransformer):
 
         # keep track of a sequence to ensure unique temporary names
         self.seq = 0
+
+        if self.should_trace:
+            self.trace_file = asp.verify.AspTrace()
 
         return self.visit(sm), self.other_funcs
 
@@ -36,10 +44,19 @@ class TinyCuConverter(NodeTransformer):
             inputtype = "std::vector<double>*"
         else:
             inputtype = "double"
-        return cpp_ast.FunctionBody(cpp_ast.FunctionDeclaration(cpp_ast.Value(node.returntype, node.name),
-                                                                [cpp_ast.Value(inputtype, x.name) for x in node.inputs[1:]]),
-                                                                cpp_ast.Block(contents=self.intermediates+
-                                                                                        [self.visit(node.body)]))
+        body = cpp_ast.Block()
+
+        if self.should_trace and node.name == "__call__":
+            body.append(self.trace_file.emit_open())
+
+        body.extend(self.intermediates+[self.visit(node.body)])
+
+        if self.should_trace and node.name == "__call__":
+            body.append(self.trace_file.emit_close())
+
+        fbody = cpp_ast.FunctionBody(cpp_ast.FunctionDeclaration(cpp_ast.Value(node.returntype, node.name),
+                                                                [cpp_ast.Value(inputtype, x.name) for x in node.inputs[1:]]), body)
+        return fbody
 
 
     def visit_FunctionReturn(self, node):
@@ -137,7 +154,7 @@ class TinyCuConverter(NodeTransformer):
         #       depth++;
         #   }
         #   for (size_t row = 0; row < depth; row++) {
-        #       size_t width = 1 << (depth - row);
+        #       size_t width = 1 << (depth - row - 1);
         #       size_t stride = 1 << (row + 1);
         #       // omp for
         #       for (size_t col = 0; col < width; col++) {
@@ -174,19 +191,28 @@ class TinyCuConverter(NodeTransformer):
                         cpp_ast.BinOp(cpp_ast.CName("width"), "-", cpp_ast.CNumber(1)),
                         1,
                         cpp_ast.Block(contents=[
+                            cpp_ast.Assign(cpp_ast.Value("size_t", "x"), cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride"))),
+                            cpp_ast.Assign(cpp_ast.Value("size_t", "y"),
+                                cpp_ast.BinOp(
+                                    cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride")),
+                                    "+",
+                                    cpp_ast.BinOp(cpp_ast.CNumber(1), "<<", cpp_ast.CName("row"))
+                                    )
+                                ),
+
+                            self.trace_file.emit_write("_reduce_read_"+inner_name+"_x", cpp_ast.CName("x"), cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CName("x"))) if self.should_trace else cpp_ast.Block(),
+                            self.trace_file.emit_write("_reduce_read_"+inner_name+"_y", cpp_ast.CName("y"), cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CName("y"))) if self.should_trace else cpp_ast.Block(),
+
                             cpp_ast.Assign(
-                                cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride"))),
+                                cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CName("x")),
                                 cpp_ast.Call(self.visit(node.func), [
-                                    cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride"))),
-                                    cpp_ast.Subscript("(*"+inner_name+")",
-                                        cpp_ast.BinOp(
-                                            cpp_ast.BinOp(cpp_ast.CName("col"), "*", cpp_ast.CName("stride")),
-                                            "+",
-                                            cpp_ast.BinOp(cpp_ast.CNumber(1), "<<", cpp_ast.CName("row"))
-                                            )
-                                        ),
+                                    cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CName("x")),
+                                    cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CName("y")),
                                     ]),
                                 ),
+
+                            self.trace_file.emit_write("_reduce_write_"+inner_name+"_x", cpp_ast.CName("x"), cpp_ast.Subscript("(*"+inner_name+")", cpp_ast.CName("x"))) if self.should_trace else cpp_ast.Block(),
+
                             ]),
                         ),
                     ]),

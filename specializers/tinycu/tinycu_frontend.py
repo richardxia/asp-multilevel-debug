@@ -3,6 +3,10 @@ from tinycu_sm import *
 import asp.codegen.python_ast as ast
 
 class TinyCuFrontend(NodeTransformer):
+    def __init__(self, should_trace=False):
+        super(TinyCuFrontend, self).__init__()
+        self.should_trace = should_trace
+
     def parse(self, tree, rettype="double", locals={}):
         self.rettype = rettype
         self.locals = locals
